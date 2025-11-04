@@ -1,0 +1,29 @@
+"""
+COPILOT TASK: Generate a Python script that creates a list of the top 10,000 most common English words.
+
+Requirements:
+1. Download a public-domain English frequency list automatically. Valid sources include:
+      - SUBTLEX-US (most recommended)
+      - wordfrequency.info (if available)
+      - Google's N-gram dataset (fallback)
+      - Open-subtitles frequency lists
+   Prefer a list that reflects modern spoken English, not 1800s literature.
+
+2. Extract only the word column, lowercase it, strip punctuation, remove duplicates, and remove obvious non-words.
+
+3. Keep only pure alphabetic words (no hyphens, numbers, etc).
+
+4. Trim the list to the top 10,000 most frequent words.
+
+5. Save result to `top_10000.txt` (one word per line, UTF-8, lowercase).
+
+6. If the word source requires HTTP download, cache it locally so reruns don’t re-download.
+
+7. Log how many raw items were found, how many removed, and final count.
+
+8. Include a `--limit` optional CLI flag so the script can output e.g. top 500 or top 2000 words instead of 10k.
+
+9. Use tqdm for progress reporting if processing a large file.
+
+10. Script must run with NO API KEYS and NO paid services — only open datasets.
+"""

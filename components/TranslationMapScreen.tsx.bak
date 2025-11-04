@@ -1,0 +1,268 @@
+import React, { useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { useAdMob } from '../utils/adMobUtils';
+import {
+    COUNTRY_LANGUAGE_MAP,
+    translateForAllCountriesOptimized,
+    type TranslationsByCountry
+} from '../utils/googleTranslate';
+import EuropeMapWrapper from './EuroMapWrapper';
+import { EU_LABEL_POS } from '../data/eu_label_positions';
+
+export default function TranslationMapScreen() {
+  const [inputText, setInputText] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationsByCountry, setTranslationsByCountry] = useState<TranslationsByCountry>({});
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+
+  // AdMob integration
+  const { isInitialized: adMobInitialized, interstitialReady, showInterstitial } = useAdMob();
+
+  const handleTranslate = async () => {
+    if (!inputText.trim()) {
+      Alert.alert('Error', 'Please enter a word to translate');
+      return;
+    }
+
+    // Show interstitial ad before translation
+    if (adMobInitialized && interstitialReady) {
+      console.log('Showing interstitial ad before translation');
+      await showInterstitial();
+    }
+
+    setIsTranslating(true);
+    setTranslationsByCountry({});
+
+    try {
+      console.log('Starting translation for:', inputText);
+      const result = await translateForAllCountriesOptimized(inputText.trim());
+      
+      console.log('Translation results:', result);
+      setTranslationsByCountry(result);
+
+      const translatedCount = Object.keys(result).length;
+      if (translatedCount > 0) {
+        Alert.alert(
+          'Translation Complete',
+          `Successfully translated "${inputText}" into ${translatedCount} languages!`
+        );
+      } else {
+        Alert.alert('Translation Failed', 'No translations could be completed. Check your API key and internet connection.');
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+      Alert.alert(
+        'Translation Error',
+        error instanceof Error ? error.message : 'An unexpected error occurred'
+      );
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleCountryPress = (countryCode: keyof typeof EU_LABEL_POS) => {
+    setSelectedCountry(countryCode);
+
+    // Get country info and translation
+    const countryInfo = COUNTRY_LANGUAGE_MAP[countryCode as keyof typeof COUNTRY_LANGUAGE_MAP];
+    const translation = translationsByCountry[countryCode];
+
+    console.log(`Country pressed: ${EU_LABEL_POS[countryCode].name}`);
+
+  // Create labels map for the EuropeMapWrapper component
+  const createLabelsMap = (): Record<string, { text: string; x: number; y: number; lang: string }> => {
+    const labelsMap: Record<string, { text: string; x: number; y: number; lang: string }> = {};
+    
+    Object.entries(translationsByCountry).forEach(([countryCode, translation]) => {
+      const position = EU_LABEL_POS[countryCode];
+      if (position) {
+        labelsMap[countryCode] = {
+          text: translation.translationText,
+          x: position.x,
+          y: position.y,
+          lang: position.lang,
+        };
+      }
+    });
+    
+    return labelsMap;
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Input Section */}
+      <View style={styles.inputSection}>
+        <TextInput
+          style={styles.textInput}
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder="Enter word"
+          placeholderTextColor="#999"
+          editable={!isTranslating}
+          returnKeyType="done"
+          onSubmitEditing={handleTranslate}
+        />
+        
+        <TouchableOpacity
+          style={[styles.translateButton, isTranslating && styles.disabledButton]}
+          onPress={handleTranslate}
+          disabled={isTranslating}
+        >
+          {isTranslating ? (
+            <ActivityIndicator color="white" size="small" />
+          ) : (
+            <Text style={styles.translateButtonText}>Translate</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Map Section */}
+      <View style={styles.mapSection}>
+        <EuropeMapWrapper
+          labels={createLabelsMap()}
+          onPressLabel={handleCountryPress}
+        />
+      </View>
+
+      {/* Status Bar */}
+      {(selectedCountry || Object.keys(translationsByCountry).length > 0) && (
+        <View style={styles.statusBar}>
+          {selectedCountry && (
+            <Text style={styles.statusText}>
+              Selected: {EU_LABEL_POS[selectedCountry as keyof typeof EU_LABEL_POS]?.name}
+            </Text>
+          )}
+          {Object.keys(translationsByCountry).length > 0 && (
+            <Text style={styles.translationCount}>
+              Translations: {Object.keys(translationsByCountry).length}/{Object.keys(COUNTRY_LANGUAGE_MAP).length} countries
+            </Text>
+          )}
+        </View>
+      )}
+
+      {/* Instructions */}
+      <View style={styles.instructionsBar}>
+        <Text style={styles.instructionText}>
+          💡 Enter a word, tap "Translate", then tap countries to hear translations spoken
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  inputSection: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  textInput: {
+    flex: 1,
+    height: 50,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: '#F8F9FA',
+    marginRight: 12,
+    color: '#2C3E50',
+  },
+  translateButton: {
+    backgroundColor: '#3498DB',
+    paddingHorizontal: 24,
+    paddingVertical: 15,
+    borderRadius: 12,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3498DB',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  disabledButton: {
+    backgroundColor: '#BDC3C7',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  translateButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  mapSection: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    margin: 10,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 5.46,
+    elevation: 9,
+    overflow: 'hidden',
+  },
+  statusBar: {
+    backgroundColor: '#34495E',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusText: {
+    color: '#ECF0F1',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  translationCount: {
+    color: '#F39C12',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  instructionsBar: {
+    backgroundColor: '#E8F6F3',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#D5F4E6',
+  },
+  instructionText: {
+    color: '#27AE60',
+    fontSize: 12,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+});

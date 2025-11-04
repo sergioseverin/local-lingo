@@ -1,0 +1,205 @@
+[
+  {
+    "countryCode": "ES",
+    "languageCode": "es",
+    "countryName": "Spain",
+    "languageName": "Spanish",
+    "flag": "🇪🇸"
+  },
+  {
+    "countryCode": "FR",
+    "languageCode": "fr",
+    "countryName": "France",
+    "languageName": "French",
+    "flag": "🇫🇷"
+  },
+  {
+    "countryCode": "DE",
+    "languageCode": "de",
+    "countryName": "Germany",
+    "languageName": "German",
+    "flag": "🇩🇪"
+  },
+  {
+    "countryCode": "IT",
+    "languageCode": "it",
+    "countryName": "Italy",
+    "languageName": "Italian",
+    "flag": "🇮🇹"
+  },
+  {
+    "countryCode": "GB",
+    "languageCode": "en",
+    "countryName": "United Kingdom",
+    "languageName": "English",
+    "flag": "🇬🇧"
+  },
+  {
+    "countryCode": "PL",
+    "languageCode": "pl",
+    "countryName": "Poland",
+    "languageName": "Polish",
+    "flag": "🇵🇱"
+  },
+  {
+    "countryCode": "NL",
+    "languageCode": "nl",
+    "countryName": "Netherlands",
+    "languageName": "Dutch",
+    "flag": "🇳🇱"
+  },
+  {
+    "countryCode": "PT",
+    "languageCode": "pt",
+    "countryName": "Portugal",
+    "languageName": "Portuguese",
+    "flag": "🇵🇹"
+  },
+  {
+    "countryCode": "GR",
+    "languageCode": "el",
+    "countryName": "Greece",
+    "languageName": "Greek",
+    "flag": "🇬🇷"
+  },
+  {
+    "countryCode": "SE",
+    "languageCode": "sv",
+    "countryName": "Sweden",
+    "languageName": "Swedish",
+    "flag": "🇸🇪"
+  },
+  {
+    "countryCode": "NO",
+    "languageCode": "no",
+    "countryName": "Norway",
+    "languageName": "Norwegian",
+    "flag": "🇳🇴"
+  },
+  {
+    "countryCode": "AT",
+    "languageCode": "de",
+    "countryName": "Austria",
+    "languageName": "German",
+    "flag": "🇦🇹"
+  },
+  {
+    "countryCode": "CH",
+    "languageCode": "de",
+    "countryName": "Switzerland",
+    "languageName": "German",
+    "flag": "🇨🇭"
+  },
+  {
+    "countryCode": "BE",
+    "languageCode": "nl",
+    "countryName": "Belgium",
+    "languageName": "Dutch",
+    "flag": "🇧🇪"
+  },
+  {
+    "countryCode": "CZ",
+    "languageCode": "cs",
+    "countryName": "Czech Republic",
+    "languageName": "Czech",
+    "flag": "🇨🇿"
+  },
+  {
+    "countryCode": "DK",
+    "languageCode": "da",
+    "countryName": "Denmark",
+    "languageName": "Danish",
+    "flag": "🇩🇰"
+  },
+  {
+    "countryCode": "FI",
+    "languageCode": "fi",
+    "countryName": "Finland",
+    "languageName": "Finnish",
+    "flag": "🇫🇮"
+  },
+  {
+    "countryCode": "HU",
+    "languageCode": "hu",
+    "countryName": "Hungary",
+    "languageName": "Hungarian",
+    "flag": "🇭🇺"
+  },
+  {
+    "countryCode": "IE",
+    "languageCode": "en",
+    "countryName": "Ireland",
+    "languageName": "English",
+    "flag": "🇮🇪"
+  },
+  {
+    "countryCode": "RO",
+    "languageCode": "ro",
+    "countryName": "Romania",
+    "languageName": "Romanian",
+    "flag": "🇷🇴"
+  },
+  {
+    "countryCode": "SK",
+    "languageCode": "sk",
+    "countryName": "Slovakia",
+    "languageName": "Slovak",
+    "flag": "🇸🇰"
+  },
+  {
+    "countryCode": "SI",
+    "languageCode": "sl",
+    "countryName": "Slovenia",
+    "languageName": "Slovenian",
+    "flag": "🇸🇮"
+  },
+  {
+    "countryCode": "HR",
+    "languageCode": "hr",
+    "countryName": "Croatia",
+    "languageName": "Croatian",
+    "flag": "🇭🇷"
+  },
+  {
+    "countryCode": "BG",
+    "languageCode": "bg",
+    "countryName": "Bulgaria",
+    "languageName": "Bulgarian",
+    "flag": "🇧🇬"
+  },
+  {
+    "countryCode": "RS",
+    "languageCode": "sr",
+    "countryName": "Serbia",
+    "languageName": "Serbian",
+    "flag": "🇷🇸"
+  },
+  {
+    "countryCode": "BA",
+    "languageCode": "bs",
+    "countryName": "Bosnia and Herzegovina",
+    "languageName": "Bosnian",
+    "flag": "🇧🇦"
+  },
+  {
+    "countryCode": "LT",
+    "languageCode": "lt",
+    "countryName": "Lithuania",
+    "languageName": "Lithuanian",
+    "flag": "🇱🇹"
+  },
+  {
+    "countryCode": "LV",
+    "languageCode": "lv",
+    "countryName": "Latvia",
+    "languageName": "Latvian",
+    "flag": "🇱🇻"
+  },
+  {
+    "countryCode": "EE",
+    "languageCode": "et",
+    "countryName": "Estonia",
+    "languageName": "Estonian",
+    "flag": "🇪🇪"
+  }
+]
