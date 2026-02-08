@@ -143,17 +143,49 @@ EXPO_PUBLIC_GOOGLE_TRANSLATE_API_KEY=your_api_key_here
 - Use TypeScript strict mode for all new code
 - Follow React Native best practices for performance optimization
 
+### Production Build Requirements
+- **Always use local Gradle builds** for production (not EAS builds due to plan limits)
+- **Version management is critical**: Update app.json, package.json, AND build.gradle
+- **Version codes must increment**: Google Play rejects duplicate version codes
+- **Keystore signing**: Production keystore automatically applied via build.gradle
+- **Build troubleshooting**: If react-native-reanimated fails, use `npx expo run:android --variant release`
+- **File size**: Expect ~80MB AAB for production builds with all assets
+- **Large file exclusions**: Marketing videos and build artifacts excluded from git
+
+### Deployment Checklist
+1. Increment version in all three files
+2. Clean build: `./gradlew clean`
+3. Build AAB: `./gradlew bundleRelease`
+4. Verify version in manifest
+5. Check keystore signature
+6. Upload to Google Play Console
+
 ## Common Commands
 ```bash
-# Start development server
+# Development
 npx expo start
-
-# Run on web
 npx expo start --web
-
-# Type checking
 npx tsc --noEmit
 
-# Build for production
-npx expo build
+# Production Build (LOCAL GRADLE - REQUIRED)
+cd android && ./gradlew clean
+cd android && ./gradlew bundleRelease
+
+# Alternative if gradle fails
+npx expo run:android --variant release --no-build-cache
+
+# Verify build
+ls -la android/app/build/outputs/bundle/release/
+keytool -printcert -jarfile android/app/build/outputs/bundle/release/app-release.aab
+
+# Production Build Automation
+# Use: /make-prod-build (see docs/prompts/make-prod-build.md)
 ```
+
+## Critical Production Information
+- **Current Production Version**: 1.1.0 (Version Code: 22)
+- **Keystore SHA1**: 04:D9:81:D0:DB:7C:81:7C:68:27:7D:F9:DB:CF:20:B6:84:12:FA:4C
+- **Google Play Package**: com.anonymous.locallingo
+- **AdMob App ID**: ca-app-pub-1356030142961879~9940129888
+- **TikTok App ID**: 7604098905004867601
+- **Build Output**: android/app/build/outputs/bundle/release/app-release.aab (~80MB)
