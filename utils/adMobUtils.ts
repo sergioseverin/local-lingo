@@ -1,7 +1,6 @@
-// TODO: Replace with react-native-google-mobile-ads imports
-// AdMob functionality temporarily disabled for migration
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
+import MobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
 
 // AdMob Ad Unit IDs
 export const AD_UNIT_IDS = {
@@ -55,7 +54,6 @@ let isAdMobInitialized = false;
 
 /**
  * Initialize AdMob with permissions and test device
- * TODO: Replace with react-native-google-mobile-ads initialization
  */
 export const initializeAdMob = async (): Promise<boolean> => {
   if (isAdMobInitialized) {
@@ -63,19 +61,18 @@ export const initializeAdMob = async (): Promise<boolean> => {
   }
 
   try {
-    // TODO: Replace with react-native-google-mobile-ads APIs
-    /*
-    // Request permissions (required for iOS 14+)
-    const { status } = await requestPermissionsAsync();
-    if (status !== 'granted') {
-      console.log('Ad tracking permission denied');
-    }
-
-    // Set test device ID for development
-    await setTestDeviceIDAsync('EMULATOR');
-    */
+    // Initialize Google Mobile Ads SDK
+    await MobileAds().initialize();
     
-    console.log('⚠️ AdMob initialization disabled - waiting for react-native-google-mobile-ads migration');
+    // Configure for child-directed treatment and content rating
+    await MobileAds().setRequestConfiguration({
+      maxAdContentRating: MaxAdContentRating.G,
+      tagForChildDirectedTreatment: false,
+      tagForUnderAgeOfConsent: false,
+      testDeviceIdentifiers: ['EMULATOR'], // Automatically allows test ads on emulators
+    });
+    
+    console.log('✅ AdMob initialized successfully');
     console.log('📱 DEVICE TESTING SETUP:');
     console.log('Current test device: "EMULATOR" (works for simulators)');
     console.log('For real device testing:');

@@ -1,20 +1,25 @@
+import Constants from 'expo-constants';
 import * as Speech from 'expo-speech';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  ScrollView,
+  View
 } from 'react-native';
 import { EU_LABEL_POS } from '../data/eu_label_positions';
 import { getLocalTranslation, loadDictionary } from '../utils/dictionaries';
 import { BannerAd } from './BannerAd';
 import EuropeMapWrapper from './EuroMapWrapper';
+
+// Import version from package.json
+const packageJson = require('../package.json');
 
 // ✅ NEW: centralized banner height used for spacing + scroll padding
 const BANNER_HEIGHT = 60;
@@ -155,8 +160,17 @@ export default function TranslateScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>🗺️ Local Lingo</Text>
+        <View style={styles.titleRow}>
+          <Image 
+            source={require('../assets/images/eu-flag-icon.png')} 
+            style={styles.flagIcon}
+          />
+          <Text style={styles.title}>Euro Lingo</Text>
+        </View>
         <Text style={styles.subtitle}>Translate words and hear them spoken across Europe</Text>
+        <Text style={styles.versionText}>
+          v{Constants.nativeAppVersion || packageJson.version} (Build {Constants.nativeBuildVersion || ''})
+        </Text>
       </View>
 
       <View style={styles.inputSection}>
@@ -226,17 +240,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  flagIcon: {
+    width: 32,
+    height: 32,
+    marginRight: 10,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 5,
   },
   subtitle: {
     fontSize: 14,
     color: '#BDC3C7',
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#7F8C8D',
+    textAlign: 'center',
+    marginTop: 5,
+    fontFamily: 'monospace',
   },
   inputSection: {
     flexDirection: 'row',
@@ -284,6 +314,8 @@ const styles = StyleSheet.create({
   },
 
   mapSection: {
+    flex: 1,
+    minHeight: 600,
     backgroundColor: '#FFFFFF',
     margin: 10,
     borderRadius: 15,

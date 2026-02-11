@@ -1,22 +1,12 @@
-// ✅ COPILOT TASK:
-// Create a component called EuropeMapWrapper that solves the clipping issue.
-// Behavior:
-//  - The map should always scale to full screen width.
-//  - Height = width / (1000 / 684) so the full SVG stays visible.
-//  - If the map height is taller than the viewport, enable vertical scrolling.
-//  - Works on React Native and React Native Web (macbook browser).
-//
-// Implementation rules:
-//  - Use useWindowDimensions() to read screen width
-//  - Compute height using aspect ratio
-//  - Wrap the map in a <ScrollView> with style={{ flex: 1, overflow: 'auto' }}
-//  - Inside ScrollView, center the map using contentContainerStyle
-//  - Inside the sized container, render <EuropeMap labels={...} onPressLabel={...} />
-//
-// After generating, do NOT modify EuropeMap.tsx — it should only render the SVG + labels.
-
+// Working pinch-to-zoom implementation
 import React from 'react';
-import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
+} from 'react-native-reanimated';
 import EuropeMap from './EuropeMap';
 
 interface LabelData {
@@ -35,42 +25,114 @@ const EuropeMapWrapper: React.FC<EuropeMapWrapperProps> = ({
   labels = {},
   onPressLabel,
 }) => {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  
-  // Calculate map height based on SVG aspect ratio (1000/684)
-  const mapWidth = screenWidth;
-  const mapHeight = mapWidth * (684 / 1000);
-  
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
+  const focalX = useSharedValue(0);
+  const focalY = useSharedValue(0);
+
+  // Pinch gesture for zooming with focal point
+  const pinchGesture = Gesture.Pinch()
+    .onStart((event) => {
+      savedScale.value = scale.value;
+      focalX.value = event.focalX;
+      focalY.value = event.focalY;
+    })
+    .onUpdate((event) => {
+      const newScale = Math.max(1, Math.min(savedScale.value * event.scale, 4));
+      scale.value = newScale;
+      
+      // Adjust translation to zoom towards focal point
+      const deltaScale = newScale - savedScale.value;
+      translateX.value = savedTranslateX.value - (event.focalX - focalX.value) * deltaScale * 0.5;
+      translateY.value = savedTranslateY.value - (event.focalY - focalY.value) * deltaScale * 0.5;
+    })
+    .onEnd(() => {
+      savedScale.value = scale.value;
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+
+  // Pan gesture for moving when zoomed
+  const panGesture = Gesture.Pan()
+    .minDistance(10)
+    .enabled(true)
+    .onStart(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    })
+    .onUpdate((event) => {
+      if (scale.value > 1) {
+        translateX.value = savedTranslateX.value + event.translationX;
+        translateY.value = savedTranslateY.value + event.translationY;
+      }
+    })
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+
+  // Double tap to reset
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      scale.value = withTiming(1, { duration: 300 });
+      translateX.value = withTiming(0, { duration: 300 });
+      translateY.value = withTiming(0, { duration: 300 });
+      savedScale.value = 1;
+      savedTranslateX.value = 0;
+      savedTranslateY.value = 0;
+    });
+
+  // Combined gestures - pinch and pan work together, double tap separate
+  const composedGesture = Gesture.Race(
+    doubleTapGesture,
+    Gesture.Simultaneous(pinchGesture, panGesture)
+  );
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: scale.value },
+      ],
+    };
+  });
+
   return (
-    <ScrollView 
-      style={styles.scrollView}
-      contentContainerStyle={[
-        styles.contentContainer,
-        { minHeight: Math.max(mapHeight, screenHeight) }
-      ]}
-      showsVerticalScrollIndicator={true}
-    >
-      <View style={[styles.mapContainer, { width: mapWidth, height: mapHeight }]}>
-        <EuropeMap
-          labels={labels}
-          onPressLabel={onPressLabel}
-        />
-      </View>
-    </ScrollView>
+    <GestureHandlerRootView style={styles.container}>
+      <GestureDetector gesture={composedGesture}>
+        <Animated.View style={styles.wrapper}>
+          <Animated.View style={[styles.animatedContainer, animatedStyle]}>
+            <View style={styles.mapContainer}>
+              <EuropeMap
+                labels={labels}
+                onPressLabel={onPressLabel}
+              />
+            </View>
+          </Animated.View>
+        </Animated.View>
+      </GestureDetector>
+    </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
   },
-  contentContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 20,
+  wrapper: {
+    flex: 1,
+  },
+  animatedContainer: {
+    flex: 1,
   },
   mapContainer: {
-    position: 'relative',
+    flex: 1,
   },
 });
 

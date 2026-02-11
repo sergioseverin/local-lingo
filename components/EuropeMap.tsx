@@ -37,7 +37,7 @@
 import EuropeSvg from '@/assets/maps/europe.svg';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { G, Text as SvgText } from 'react-native-svg';
+import Svg, { G, Text as SvgText, Circle } from 'react-native-svg';
 
 interface LabelData {
   text: string;
@@ -74,19 +74,29 @@ const EuropeMap: React.FC<EuropeMapProps> = ({
         >
           <G>
             {Object.entries(labels).map(([countryCode, labelData]) => (
-              <SvgText
-                key={`label-${countryCode}`}
-                x={labelData.x}
-                y={labelData.y}
-                fontSize="16"
-                fontWeight="bold"
-                fill="#333333"
-                textAnchor="middle"
-                alignmentBaseline="middle"
-                onPress={() => onPressLabel?.(countryCode, labelData.lang)}
-              >
-                {labelData.text}
-              </SvgText>
+              <G key={`label-${countryCode}`}>
+                {/* Invisible larger circle for easier tapping */}
+                <Circle
+                  cx={labelData.x}
+                  cy={labelData.y}
+                  r="30"
+                  fill="transparent"
+                  onPress={() => onPressLabel?.(countryCode, labelData.lang)}
+                />
+                {/* The actual text */}
+                <SvgText
+                  x={labelData.x}
+                  y={labelData.y}
+                  fontSize="16"
+                  fontWeight="bold"
+                  fill="#333333"
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  onPress={() => onPressLabel?.(countryCode, labelData.lang)}
+                >
+                  {labelData.text}
+                </SvgText>
+              </G>
             ))}
           </G>
         </Svg>

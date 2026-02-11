@@ -1,14 +1,16 @@
+import Constants from 'expo-constants';
 import * as Speech from 'expo-speech';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { EU_LABEL_POS } from '../data/eu_label_positions';
 import { useAdMob } from '../utils/adMobUtils';
@@ -18,6 +20,9 @@ import {
   type TranslationsByCountry
 } from '../utils/googleTranslate';
 import EuropeMapWrapper from './EuroMapWrapper';
+
+// Import version from package.json
+const packageJson = require('../package.json');
 
 // Constants
 const BANNER_HEIGHT = 80; // Height of the bottom banner ad + padding
@@ -32,6 +37,17 @@ export default function TranslationMapScreen({ onStatusChange }: TranslationMapS
   const [translationsByCountry, setTranslationsByCountry] = useState<TranslationsByCountry>({});
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+
+  // Safe version access  
+  const getVersionDisplay = () => {
+    try {
+      const version = Constants.nativeAppVersion || packageJson.version;
+      const build = Constants.nativeBuildVersion;
+      return `v${version} (Build ${build || ''})`;
+    } catch (error) {
+      return `v${packageJson.version} (Build )`;
+    }
+  };
 
   // AdMob integration
   const { isInitialized: adMobInitialized, interstitialReady, showInterstitial } = useAdMob();
@@ -164,6 +180,21 @@ export default function TranslationMapScreen({ onStatusChange }: TranslationMapS
 
   return (
     <View style={styles.container}>
+      {/* Header Section */}
+      <View style={styles.header}>
+        <View style={styles.titleRow}>
+          <Image 
+            source={require('../assets/images/eu-flag-icon.png')} 
+            style={styles.flagIcon}
+          />
+          <Text style={styles.title}>Euro Lingo</Text>
+        </View>
+        <Text style={styles.subtitle}>Translate words and hear them spoken across Europe</Text>
+        <Text style={styles.versionText}>
+          {getVersionDisplay()}
+        </Text>
+      </View>
+
       {/* Input Section */}
       <View style={styles.inputSection}>
         <TextInput
@@ -207,6 +238,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+  },
+  header: {
+    backgroundColor: '#2C3E50',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  flagIcon: {
+    width: 32,
+    height: 32,
+    marginRight: 10,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#BDC3C7',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#95A5A6',
+    textAlign: 'center',
+    marginTop: 5,
+    fontWeight: '500',
   },
   inputSection: {
     flexDirection: 'row',

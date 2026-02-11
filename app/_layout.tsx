@@ -1,3 +1,6 @@
+import { initializeAdMob } from '@/utils/adMobUtils';
+import { initializeTikTok, trackInstall, trackLaunch } from '@/utils/tiktokUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -9,19 +12,32 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
-  // TODO: Replace with react-native-google-mobile-ads initialization
-  // Initialize AdMob test device for development
+  // Initialize AdMob and TikTok on app startup
   useEffect(() => {
-    const initializeAdMob = async () => {
+    const init = async () => {
       try {
-        // await setTestDeviceIDAsync("EMULATOR");
-        console.log('⚠️ AdMob initialization disabled - waiting for react-native-google-mobile-ads migration');
+        await initializeAdMob();
+        console.log('✅ AdMob ready for use');
+        
+        // Initialize TikTok Business SDK
+        await initializeTikTok();
+        
+        // Check if this is first app launch (install tracking)
+        const hasTrackedInstall = await AsyncStorage.getItem('tiktok_install_tracked');
+        if (!hasTrackedInstall) {
+          await trackInstall();
+          await AsyncStorage.setItem('tiktok_install_tracked', 'true');
+          console.log('📥 First launch - install event tracked');
+        }
+        
+        // Track app launch
+        await trackLaunch();
       } catch (error) {
-        console.error('❌ Failed to register AdMob test device:', error);
+        console.error('❌ Failed to initialize app services:', error);
       }
     };
 
-    initializeAdMob();
+    init();
   }, []);
 
   return (

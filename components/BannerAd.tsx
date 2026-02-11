@@ -1,7 +1,6 @@
-// TODO: Replace with react-native-google-mobile-ads
-// import { AdMobBanner } from 'expo-ads-admob';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { BannerAdSize, BannerAd as GoogleBannerAd } from 'react-native-google-mobile-ads';
 import { getAdUnitId, initializeAdMob } from '../utils/adMobUtils';
 
 interface BannerAdProps {
@@ -69,23 +68,15 @@ export function BannerAd({
 
   return (
     <View style={[styles.bannerContainer, style]}>
-      {/* TODO: Replace with react-native-google-mobile-ads banner */}
-      <View style={styles.placeholderBanner}>
-        <Text style={styles.placeholderText}>Ad Banner Placeholder</Text>
-        <Text style={styles.placeholderSubtext}>Waiting for react-native-google-mobile-ads migration</Text>
-        <Text style={styles.placeholderSubtext}>Ad Unit: {getAdUnitId()}</Text>
-      </View>
-      
-      {/* 
-      <AdMobBanner
-        bannerSize={size}
-        adUnitID={getAdUnitId()}
-        servePersonalizedAds={false}
-        onDidFailToReceiveAdWithError={handleBannerError}
-        onAdViewDidReceiveAd={handleBannerLoad}
-        style={styles.banner}
+      <GoogleBannerAd
+        unitId={getAdUnitId()}
+        size={BannerAdSize.BANNER}
+        requestOptions={{
+          requestNonPersonalizedAdsOnly: true,
+        }}
+        onAdFailedToLoad={(error) => handleBannerError(error.message)}
+        onAdLoaded={handleBannerLoad}
       />
-      */}
       
       {bannerError && (
         <View style={styles.errorContainer}>

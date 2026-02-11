@@ -66,6 +66,9 @@ app-example
 /ios
 /android
 
+# large data files that should not be uploaded to EAS
+app/data/eu_dictionary.json
+
 # build caches and artifacts
 .cxx/
 *.apk
