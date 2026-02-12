@@ -23,6 +23,7 @@ import EuropeMapWrapper from './EuroMapWrapper';
 
 // Import version from package.json
 const packageJson = require('../package.json');
+const appJson = require('../app.json');
 
 // Constants
 const BANNER_HEIGHT = 80; // Height of the bottom banner ad + padding
@@ -42,10 +43,9 @@ export default function TranslationMapScreen({ onStatusChange }: TranslationMapS
   const getVersionDisplay = () => {
     try {
       const version = Constants.nativeAppVersion || packageJson.version;
-      const build = Constants.nativeBuildVersion;
-      return `v${version} (Build ${build || ''})`;
+      return `v${version}`;
     } catch (error) {
-      return `v${packageJson.version} (Build )`;
+      return `v${packageJson.version}`;
     }
   };
 

@@ -38,7 +38,7 @@ export async function loadDictionary(): Promise<boolean> {
     console.log('Loading offline dictionary...');
     
     // Import the dictionary file
-    const dictionaryData = require('../base.json');
+    const dictionaryData = require('../app/data/eu_dictionary.json');
     dictionary = dictionaryData;
     
     const wordCount = Object.keys(dictionary!).length;

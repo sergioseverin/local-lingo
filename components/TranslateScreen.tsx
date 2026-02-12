@@ -68,6 +68,9 @@ export default function TranslateScreen() {
 
   // Load dictionary on component mount
   useEffect(() => {
+    console.log('Package.json:', JSON.stringify(packageJson, null, 2));
+    console.log('Constants:', JSON.stringify(Constants, null, 2));
+
     const initializeDictionary = async () => {
       try {
         console.log('Loading offline dictionary...');
@@ -169,7 +172,7 @@ export default function TranslateScreen() {
         </View>
         <Text style={styles.subtitle}>Translate words and hear them spoken across Europe</Text>
         <Text style={styles.versionText}>
-          v{Constants.nativeAppVersion || packageJson.version} (Build {Constants.nativeBuildVersion || ''})
+          v{packageJson.version}
         </Text>
       </View>
 
@@ -198,18 +201,18 @@ export default function TranslateScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ✅ FIX: ScrollView now applies bottom padding so map never scrolls behind banner */}
-      <ScrollView
-        style={styles.mapScroll}
-        contentContainerStyle={{ paddingBottom: BANNER_HEIGHT + 20 }}
-      >
-        <View style={styles.mapSection}>
-          <EuropeMapWrapper
-            labels={buildLabels()}
-            onPressLabel={handleSpeak}
-          />
-        </View>
-      </ScrollView>
+      {/* Map area takes remaining space - removed ScrollView to fix zoom gestures */}
+      <View style={[
+        styles.mapContainer,
+        // Only reserve space if status bar is NOT showing. 
+        // If status bar shows, it handles the spacing/background itself.
+        statusMessage !== '' ? { marginBottom: 0 } : {}
+      ]}>
+        <EuropeMapWrapper
+          labels={buildLabels()}
+          onPressLabel={handleSpeak}
+        />
+      </View>
 
       {/* ✅ FIX: Full-width status bar now rendered ABOVE banner, never hidden */}
       {statusMessage !== '' && (
@@ -239,6 +242,8 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     alignItems: 'center',
+    zIndex: 10, // Ensure header stays above map
+    elevation: 10,
   },
   titleRow: {
     flexDirection: 'row',
@@ -276,6 +281,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
     alignItems: 'center',
+    zIndex: 10, // Ensure input stays above map
+    elevation: 10,
   },
   textInput: {
     flex: 1,
@@ -307,30 +314,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // ✅ FIX: map scroll lives inside ScrollView, not flex:1
-  mapScroll: {
-    flex: 1,
+  mapContainer: {
+    flex: 1, // Take all remaining space
     backgroundColor: '#FFFFFF',
-  },
-
-  mapSection: {
-    flex: 1,
-    minHeight: 600,
-    backgroundColor: '#FFFFFF',
-    margin: 10,
-    borderRadius: 15,
-    overflow: 'hidden',
+    marginBottom: BANNER_HEIGHT, // Reserve space for banner (default, overridden in JSX)
+    zIndex: 1,
+    overflow: 'hidden', // Ensure map doesn't bleed out
   },
 
   // ✅ NEW: status bar now full width
-statusBar: {
-  backgroundColor: '#34495E',
-  paddingHorizontal: 20,
-  paddingTop: 12,
-  paddingBottom: 70, // ✅ allow space above the banner
-  alignItems: 'center',
-  width: '100%',
-},
+  statusBar: {
+    backgroundColor: '#34495E',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: BANNER_HEIGHT + 12, // Extend behind banner + padding
+    alignItems: 'center',
+    width: '100%',
+  },
   translationCount: {
     color: '#F39C12',
     fontSize: 14,
@@ -348,7 +348,7 @@ statusBar: {
     justifyContent: 'center',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
-    zIndex: 1000,
+    zIndex: 0, // Visual fix: prevent banner from blocking map interaction if overlap occurs
   },
   bottomBanner: {
     backgroundColor: 'transparent',

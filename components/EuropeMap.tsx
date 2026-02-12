@@ -36,8 +36,7 @@
 
 import EuropeSvg from '@/assets/maps/europe.svg';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import Svg, { G, Text as SvgText, Circle } from 'react-native-svg';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface LabelData {
   text: string;
@@ -51,56 +50,48 @@ interface EuropeMapProps {
   onPressLabel?: (countryCode: string, languageCode?: string) => void;
 }
 
+const MAP_WIDTH = 1000;
+const MAP_HEIGHT = 684;
+
 const EuropeMap: React.FC<EuropeMapProps> = ({
   labels = {},
   onPressLabel,
 }) => {
   return (
+    // Container enforces aspect ratio to match SVG coordinate system
     <View style={styles.container}>
-      {/* Render the Europe SVG */}
-      <EuropeSvg
-        preserveAspectRatio="xMidYMid meet"
-        width="100%"
-        height="100%"
-        style={StyleSheet.absoluteFill}
-      />
-      
-      {/* Overlay labels with the SAME viewBox as europe.svg */}
-      {Object.keys(labels).length > 0 && (
-        <Svg
-          viewBox="0 0 1000 684"
+      {/* Background Map */}
+      <View style={StyleSheet.absoluteFill}>
+        <EuropeSvg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
           preserveAspectRatio="xMidYMid meet"
-          style={StyleSheet.absoluteFill}
+        />
+      </View>
+      
+      {/* Interactive Overlay Layers */}
+      {Object.entries(labels).map(([countryCode, labelData]) => (
+        <TouchableOpacity
+          key={`label-${countryCode}`}
+          style={[
+            styles.touchTarget,
+            {
+              left: `${(labelData.x / MAP_WIDTH) * 100}%`,
+              top: `${(labelData.y / MAP_HEIGHT) * 100}%`,
+            }
+          ]}
+          onPress={() => {
+            console.log(`[EuropeMap] Tapped ${countryCode}`);
+            onPressLabel?.(countryCode, labelData.lang)
+          }}
+          activeOpacity={0.7}
         >
-          <G>
-            {Object.entries(labels).map(([countryCode, labelData]) => (
-              <G key={`label-${countryCode}`}>
-                {/* Invisible larger circle for easier tapping */}
-                <Circle
-                  cx={labelData.x}
-                  cy={labelData.y}
-                  r="30"
-                  fill="transparent"
-                  onPress={() => onPressLabel?.(countryCode, labelData.lang)}
-                />
-                {/* The actual text */}
-                <SvgText
-                  x={labelData.x}
-                  y={labelData.y}
-                  fontSize="16"
-                  fontWeight="bold"
-                  fill="#333333"
-                  textAnchor="middle"
-                  alignmentBaseline="middle"
-                  onPress={() => onPressLabel?.(countryCode, labelData.lang)}
-                >
-                  {labelData.text}
-                </SvgText>
-              </G>
-            ))}
-          </G>
-        </Svg>
-      )}
+          <Text style={styles.labelText}>
+            {labelData.text}
+          </Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 };
@@ -108,9 +99,25 @@ const EuropeMap: React.FC<EuropeMapProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    aspectRatio: 1000 / 684, // match SVG viewBox ratio
+    aspectRatio: MAP_WIDTH / MAP_HEIGHT,
     position: 'relative',
-    alignSelf: 'center',
+  },
+  touchTarget: {
+    position: 'absolute',
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    padding: 2, // Minimal padding for touch target
+  },
+  labelText: {
+    color: '#333333',
+    fontWeight: 'bold',
+    fontSize: 7, 
+    textAlign: 'center',
+    textShadowColor: 'rgba(255, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
 
