@@ -1,6 +1,7 @@
 import { initializeSdk, TikTokEventName, trackCustomEvent, trackEvent } from 'react-native-tiktok-business-sdk';
 
 const TIKTOK_APP_ID = '7604098905004867601';
+const APP_ID = 'com.anonymous.locallingo';
 
 // Global TikTok initialization flag
 let isTikTokInitialized = false;
@@ -15,9 +16,10 @@ export const initializeTikTok = async (): Promise<boolean> => {
 
   try {
     // initializeSdk(appId, ttAppId, accessToken, debug)
-    await initializeSdk(TIKTOK_APP_ID, TIKTOK_APP_ID, '', false);
+    await initializeSdk(APP_ID, TIKTOK_APP_ID, '', false);
     
     console.log('✅ TikTok Business SDK initialized successfully');
+    console.log('📱 App ID:', APP_ID);
     console.log('📱 TikTok App ID:', TIKTOK_APP_ID);
     
     isTikTokInitialized = true;
@@ -32,11 +34,14 @@ export const initializeTikTok = async (): Promise<boolean> => {
  * Track app installation event
  */
 export const trackInstall = async () => {
+  const ok = await initializeTikTok();
+  if (!ok) return;
+
   try {
     await trackEvent(TikTokEventName.APP_INSTALL);
-    console.log('✅ TikTok: InstallApp event tracked');
+    console.log('✅ TikTok: LaunchApp event tracked');
   } catch (error) {
-    console.error('❌ TikTok: Failed to track InstallApp event:', error);
+    console.error('❌ TikTok: Failed to track LaunchApp event:', error);
   }
 };
 
@@ -44,6 +49,9 @@ export const trackInstall = async () => {
  * Track app launch event
  */
 export const trackLaunch = async () => {
+  const ok = await initializeTikTok();
+  if (!ok) return;
+
   try {
     await trackEvent(TikTokEventName.LAUNCH_APP);
     console.log('✅ TikTok: LaunchApp event tracked');
@@ -56,6 +64,9 @@ export const trackLaunch = async () => {
  * Track translation event (custom event)
  */
 export const trackTranslation = async (word: string, languagesCount: number) => {
+  const ok = await initializeTikTok();
+  if (!ok) return;
+
   try {
     await trackCustomEvent('Translation', {
       word,
@@ -71,6 +82,9 @@ export const trackTranslation = async (word: string, languagesCount: number) => 
  * Track ad click event
  */
 export const trackAdClick = async () => {
+  const ok = await initializeTikTok();
+  if (!ok) return;
+
   try {
     await trackCustomEvent('AdClick', {
       button_name: 'ad_click',
