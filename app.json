@@ -2,7 +2,7 @@
   "expo": {
     "name": "Euro Lingo",
     "slug": "local-lingo",
-    "version": "1.2.7",
+    "version": "1.2.8",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "locallingo",
@@ -33,7 +33,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.locallingo",
-      "versionCode": 34
+      "versionCode": 35
     },
     "web": {
       "output": "static",

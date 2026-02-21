@@ -147,19 +147,26 @@ Minimal compliance for your app:
   • Add an “About / Data sources” screen with something like:
     “Dictionary data derived from English Wiktionary via Wiktextract/Kaikki.org, licensed under CC BY-SA 3.0 and GFDL.”
 
-To generate the offline multilingual dictionary used in Local Lingo:
+
+### Dictionary Build Methods
+
+**Current method (recommended):**
 
 1. Go to https://kaikki.org/dictionary/rawdata.html
 2. Download the file: "Download raw Wiktextract data (JSONL, one object per line)" (raw-wiktextract-data.jsonl.gz, ~2.3GB compressed, ~20.3GB uncompressed)
-  - Direct link: https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
+   - Direct link: https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
 3. Extract the .gz file to obtain raw-wiktextract-data.jsonl (use `gunzip` or similar tool)
-4. Process the extracted JSONL file with a custom script (e.g., build_eu_dictionary.py) to filter, parse, and convert it into the app's dictionary format (eu_dictionary.json)
-  - The script should select relevant languages, normalize entries, and output a compact JSON mapping English words to translations for each target language.
+4. Process the extracted JSONL file with the script: `scripts/Wiktextract_build_eu_dictionary.py` to filter, parse, and convert it into the app's dictionary format (`app/data/eu_dictionary.json`)
+   - The script selects relevant languages, normalizes entries, and outputs a compact JSON mapping English words to translations for each target language.
 5. Place the resulting eu_dictionary.json in app/data/ and/or compress as base.min.json.gz for assets/dictionaries/
+
+**Alternative (legacy) method:**
+
+- Use `scripts/GoogleAPI_build_dictionary.py` to build a dictionary using the Google Cloud Translation API. This method is not currently used for production, but can be used for testing or fallback.
 
 **Note:** The Kaikki.org Wiktextract dataset is a comprehensive, community-sourced multilingual dictionary. The processing script must handle large files efficiently and select only the languages/countries needed for Local Lingo.
 
-If you need to regenerate or update the dictionary, follow these steps. For details on the processing script, see scripts/build_eu_dictionary.py or related documentation
+If you need to regenerate or update the dictionary, follow these steps. For details on the processing script, see `scripts/Wiktextract_build_eu_dictionary.py` (Wiktextract) or `scripts/GoogleAPI_build_dictionary.py` (Google API).
 
 
 - **Large file exclusions**: Marketing videos and build artifacts excluded from git
