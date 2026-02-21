@@ -70,7 +70,7 @@ export function getLocalTranslation(word: string): Record<string, string> | null
 
   const normalizedWord = word.toLowerCase().trim();
   const dictionaryEntry = dictionary[normalizedWord];
-  
+
   if (!dictionaryEntry) {
     console.log(`Word "${word}" not found in offline dictionary`);
     return null;
@@ -78,20 +78,28 @@ export function getLocalTranslation(word: string): Record<string, string> | null
 
   // Map language codes to country codes using EU_LABEL_POS
   const result: Record<string, string> = {};
-  
+
   Object.entries(EU_LABEL_POS).forEach(([countryCode, labelData]) => {
     // Extract base language code (e.g., "en" from "en-GB")
     const baseLang = labelData.lang.split('-')[0];
-    
-    // Get translation for this language
-    const translation = dictionaryEntry[baseLang];
-    
+
+    // Always show the English word for GB and IE
+    if (countryCode === 'GB' || countryCode === 'IE') {
+      result[countryCode] = word;
+      return;
+    }
+
+    let translation = dictionaryEntry[baseLang];
+
+    // For Croatian (HR), Bosnian (BA), Serbian (RS), use Serbo-Croatian (sh/SB) if their own translation is missing
+    if (!translation && (countryCode === 'HR' || countryCode === 'BA' || countryCode === 'RS')) {
+      translation = dictionaryEntry['sh'] || dictionaryEntry['sb'];
+    }
+
     if (translation) {
       result[countryCode] = translation;
-    } else {
-      // Fallback to English if translation not available
-      result[countryCode] = word;
     }
+    // If no translation, do not add any entry for this country
   });
 
   console.log(`📖 Local translation for "${word}": ${Object.keys(result).length} countries translated`);

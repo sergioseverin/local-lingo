@@ -137,19 +137,31 @@ EXPO_PUBLIC_GOOGLE_TRANSLATE_API_KEY=your_api_key_here
 5. **Advanced Maps**: More detailed geographical representations
 
 ## Development Notes
-- Always use absolute file paths when working with this project
-- Test AdMob functionality on physical devices (ads don't show in simulator)
-- Ensure Google Translate API key is configured before testing translation features
-- Use TypeScript strict mode for all new code
-- Follow React Native best practices for performance optimization
 
-### Production Build Requirements
-- **Always use local Gradle builds** for production (not EAS builds due to plan limits)
-- **Version management is critical**: Update app.json, package.json, AND build.gradle
-- **Version codes must increment**: Google Play rejects duplicate version codes
-- **Keystore signing**: Production keystore automatically applied via build.gradle
-- **Build troubleshooting**: If react-native-reanimated fails, use `npx expo run:android --variant release`
-- **File size**: Expect ~80MB AAB for production builds with all assets
+## Offline Dictionary Generation (Kaikki.org Wiktextract)
+### Licensing & Attribution
+
+The raw data is from English Wiktionary via Wiktextract, licensed under CC BY-SA + GFDL.
+
+Minimal compliance for your app:
+  • Add an “About / Data sources” screen with something like:
+    “Dictionary data derived from English Wiktionary via Wiktextract/Kaikki.org, licensed under CC BY-SA 3.0 and GFDL.”
+
+To generate the offline multilingual dictionary used in Local Lingo:
+
+1. Go to https://kaikki.org/dictionary/rawdata.html
+2. Download the file: "Download raw Wiktextract data (JSONL, one object per line)" (raw-wiktextract-data.jsonl.gz, ~2.3GB compressed, ~20.3GB uncompressed)
+  - Direct link: https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
+3. Extract the .gz file to obtain raw-wiktextract-data.jsonl (use `gunzip` or similar tool)
+4. Process the extracted JSONL file with a custom script (e.g., build_eu_dictionary.py) to filter, parse, and convert it into the app's dictionary format (eu_dictionary.json)
+  - The script should select relevant languages, normalize entries, and output a compact JSON mapping English words to translations for each target language.
+5. Place the resulting eu_dictionary.json in app/data/ and/or compress as base.min.json.gz for assets/dictionaries/
+
+**Note:** The Kaikki.org Wiktextract dataset is a comprehensive, community-sourced multilingual dictionary. The processing script must handle large files efficiently and select only the languages/countries needed for Local Lingo.
+
+If you need to regenerate or update the dictionary, follow these steps. For details on the processing script, see scripts/build_eu_dictionary.py or related documentation
+
+
 - **Large file exclusions**: Marketing videos and build artifacts excluded from git
 
 ### Deployment Checklist
