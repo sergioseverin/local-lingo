@@ -14,42 +14,54 @@ interface Dictionary {
   [word: string]: DictionaryEntry;
 }
 
-// Global dictionary storage
-let dictionary: Dictionary | null = null;
+// Global dictionary storage (keyed by language code)
+let dictionaries: Record<string, Dictionary> = {};
 let isLoading = false;
 
 /**
- * Load the offline dictionary from base.json
- * This should be called once when the app starts
+ * Load the offline dictionary for a specific language
+ * @param dictionaryFile The file name of the dictionary to load
+ * @param languageCode The language code (e.g., EN, DE)
  */
-export async function loadDictionary(): Promise<boolean> {
-  if (dictionary !== null) {
-    console.log('Dictionary already loaded');
+export async function loadDictionary(dictionaryFile: string, languageCode: string): Promise<boolean> {
+  if (dictionaries[languageCode]) {
+    console.log(`Dictionary for ${languageCode} already loaded`);
     return true;
   }
 
   if (isLoading) {
-    console.log('Dictionary is already being loaded');
+    console.log('A dictionary is already being loaded');
     return false;
   }
 
   try {
     isLoading = true;
-    console.log('Loading offline dictionary...');
-    
-    // Import the dictionary file
-    const dictionaryData = require('../app/data/eu_dictionary.json');
-    dictionary = dictionaryData;
-    
-    const wordCount = Object.keys(dictionary!).length;
-    const firstWord = Object.keys(dictionary!)[0];
-    const languageCount = firstWord ? Object.keys(dictionary![firstWord]).length : 0;
-    
-    console.log(`✅ Dictionary loaded successfully: ${wordCount} words in ${languageCount} languages`);
+    console.log(`Loading offline dictionary for ${languageCode} from ${dictionaryFile}...`);
+
+    // Static mapping of dictionary files to their imports
+    const dictionaryFileMap: Record<string, any> = {
+      'eu_en_dictionary.json': require('../app/data/eu_en_dictionary.json'),
+      'eu_de_dictionary.json': require('../app/data/eu_de_dictionary.json'),
+      'eu_es_dictionary.json': require('../app/data/eu_es_dictionary.json'),
+      'eu_fr_dictionary.json': require('../app/data/eu_fr_dictionary.json'),
+      'eu_it_dictionary.json': require('../app/data/eu_it_dictionary.json'),
+    };
+
+    const dictionaryData = dictionaryFileMap[dictionaryFile];
+    if (!dictionaryData) {
+      throw new Error(`Dictionary file not found: ${dictionaryFile}`);
+    }
+
+    dictionaries[languageCode] = dictionaryData; // Store the dictionary in memory
+
+    const wordCount = Object.keys(dictionaryData).length;
+    const firstWord = Object.keys(dictionaryData)[0];
+    const languageCount = firstWord ? Object.keys(dictionaryData[firstWord]).length : 0;
+
+    console.log(`✅ Dictionary for ${languageCode} loaded successfully: ${wordCount} words in ${languageCount} languages`);
     return true;
   } catch (error) {
-    console.error('❌ Failed to load dictionary:', error);
-    dictionary = null;
+    console.error(`❌ Failed to load dictionary for ${languageCode}:`, error);
     return false;
   } finally {
     isLoading = false;
@@ -57,14 +69,15 @@ export async function loadDictionary(): Promise<boolean> {
 }
 
 /**
- * Get local translation for a word
- * Returns a map of country codes to translated words
- * @param word The English word to translate
+ * Get local translation for a word in the specified language
+ * @param word The word to translate
+ * @param languageCode The language code (e.g., EN, DE)
  * @returns Record<string, string> mapping country codes to translations, or null if word not found
  */
-export function getLocalTranslation(word: string): Record<string, string> | null {
+export function getLocalTranslation(word: string, languageCode: string): Record<string, string> | null {
+  const dictionary = dictionaries[languageCode]; // Retrieve the dictionary for the specified language
   if (!dictionary) {
-    console.warn('Dictionary not loaded yet. Call loadDictionary() first.');
+    console.warn(`Dictionary for ${languageCode} not loaded yet. Call loadDictionary() first.`);
     return null;
   }
 
@@ -72,20 +85,20 @@ export function getLocalTranslation(word: string): Record<string, string> | null
   const dictionaryEntry = dictionary[normalizedWord];
 
   if (!dictionaryEntry) {
-    console.log(`Word "${word}" not found in offline dictionary`);
+    console.log(`Word "${word}" not found in offline dictionary for ${languageCode}`);
     return null;
   }
 
-  // Map language codes to country codes using EU_LABEL_POS
-  const result: Record<string, string> = {};
+  const englishTranslation = dictionaryEntry['en']; // Retrieve the English translation
+
+  const result: Record<string, string> = {}; // Initialize result to store translations
 
   Object.entries(EU_LABEL_POS).forEach(([countryCode, labelData]) => {
-    // Extract base language code (e.g., "en" from "en-GB")
     const baseLang = labelData.lang.split('-')[0];
 
-    // Always show the English word for GB and IE
-    if (countryCode === 'GB' || countryCode === 'IE') {
-      result[countryCode] = word;
+    // Always show the English translation for GB and IE
+    if ((countryCode === 'GB' || countryCode === 'IE') && englishTranslation) {
+      result[countryCode] = englishTranslation;
       return;
     }
 
@@ -99,10 +112,9 @@ export function getLocalTranslation(word: string): Record<string, string> | null
     if (translation) {
       result[countryCode] = translation;
     }
-    // If no translation, do not add any entry for this country
   });
 
-  console.log(`📖 Local translation for "${word}": ${Object.keys(result).length} countries translated`);
+  console.log(`📖 Local translation for "${word}" in ${languageCode}: ${Object.keys(result).length} countries translated`);
   return result;
 }
 
@@ -110,18 +122,18 @@ export function getLocalTranslation(word: string): Record<string, string> | null
  * Check if dictionary is ready
  */
 export function isDictionaryReady(): boolean {
-  return dictionary !== null;
+  return Object.keys(dictionaries).length > 0;
 }
 
 /**
  * Get dictionary statistics
  */
 export function getDictionaryStats(): { wordCount: number; languageCount: number } | null {
-  if (!dictionary) return null;
-  
-  const words = Object.keys(dictionary);
+  if (!dictionaries) return null;
+
+  const words = Object.keys(dictionaries);
   const wordCount = words.length;
-  const languageCount = words.length > 0 ? Object.keys(dictionary[words[0]]).length : 0;
-  
+  const languageCount = words.length > 0 ? Object.keys(dictionaries[words[0]]).length : 0;
+
   return { wordCount, languageCount };
 }

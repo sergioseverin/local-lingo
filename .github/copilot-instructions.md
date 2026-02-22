@@ -158,7 +158,7 @@ Minimal compliance for your app:
 3. Extract the .gz file to obtain raw-wiktextract-data.jsonl (use `gunzip` or similar tool)
 4. Process the extracted JSONL file with the script: `scripts/Wiktextract_build_eu_dictionary.py` to filter, parse, and convert it into the app's dictionary format (`app/data/eu_dictionary.json`)
    - The script selects relevant languages, normalizes entries, and outputs a compact JSON mapping English words to translations for each target language.
-5. Place the resulting eu_dictionary.json in app/data/ and/or compress as base.min.json.gz for assets/dictionaries/
+5. Place the resulting eu_en_dictionary.json in app/data/ and/or compress as base.min.json.gz for assets/dictionaries/
 
 **Alternative (legacy) method:**
 

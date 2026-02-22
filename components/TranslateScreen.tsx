@@ -2,16 +2,16 @@ import Constants from 'expo-constants';
 import * as Speech from 'expo-speech';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Image,
+    Modal,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { EU_LABEL_POS } from '../data/eu_label_positions';
 import { getLocalTranslation, loadDictionary } from '../utils/dictionaries';
@@ -65,6 +65,17 @@ export default function TranslateScreen() {
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [dictionaryReady, setDictionaryReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('en'); // Default to English
+  const [sourceLang, setSourceLang] = useState<string>('EN');
+  const sourceLangOptions = [
+    { code: 'EN', label: 'English' },
+    { code: 'IT', label: 'Italian' },
+    { code: 'DE', label: 'German' },
+    { code: 'ES', label: 'Spanish' },
+    { code: 'FR', label: 'French' },
+  ];
+  const [dropdownVisible, setDropdownVisible] = useState(false); // State to toggle dropdown visibility
+  const [isLoading, setIsLoading] = useState(false); // State to manage loading dialog visibility
 
   // Load dictionary on component mount
   useEffect(() => {
@@ -73,18 +84,42 @@ export default function TranslateScreen() {
 
     const initializeDictionary = async () => {
       try {
-        console.log('Loading offline dictionary...');
-        await loadDictionary();
+        const selectedLanguageLabel = sourceLangOptions.find(opt => opt.code === sourceLang)?.label || 'English';
+        console.log(`Loading ${selectedLanguageLabel} dictionary...`);
+        setStatusMessage(`Loading ${selectedLanguageLabel} dictionary...`); // Set dynamic loading message
+        setIsLoading(true); // Ensure loading state is set to true
+
+        // Map sourceLang to dictionary file names
+        const dictionaryFileMap: Record<string, string> = {
+          EN: 'eu_en_dictionary.json',
+          DE: 'eu_de_dictionary.json',
+          ES: 'eu_es_dictionary.json',
+          FR: 'eu_fr_dictionary.json',
+          IT: 'eu_it_dictionary.json',
+        };
+
+        const dictionaryFile = dictionaryFileMap[sourceLang];
+        if (!dictionaryFile) {
+          throw new Error(`No dictionary file found for language code: ${sourceLang}`);
+        }
+
+        // Force immediate state update before proceeding
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        await loadDictionary(dictionaryFile, sourceLang); // Pass the language code explicitly
         setDictionaryReady(true);
-        console.log('Dictionary loaded successfully');
+        console.log(`${selectedLanguageLabel} dictionary loaded successfully`);
       } catch (error) {
         console.error('Failed to load dictionary:', error);
         Alert.alert('Dictionary Error', 'Failed to load offline dictionary. Some features may not work.');
+      } finally {
+        setIsLoading(false); // Ensure loading state is set to false in case of error or success
+        setStatusMessage(''); // Clear the loading message
       }
     };
 
     initializeDictionary();
-  }, []);
+  }, [sourceLang]); // Trigger whenever sourceLang changes
 
   const handleTranslate = async () => {
     if (!dictionaryReady) {
@@ -104,7 +139,7 @@ export default function TranslateScreen() {
       const word = inputText.trim().toLowerCase();
       console.log('Starting offline translation for:', word);
       
-      const result = getLocalTranslation(word);
+      const result = getLocalTranslation(word, sourceLang);
       
       if (!result) {
         setTranslations({});
@@ -162,6 +197,20 @@ export default function TranslateScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Loading dialog */}
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={isLoading} // Ensure modal visibility is tied to isLoading state
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ActivityIndicator size="large" color="#3498DB" />
+            <Text style={styles.modalText}>{statusMessage || 'Loading dictionary, please wait...'}</Text>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Image 
@@ -177,6 +226,38 @@ export default function TranslateScreen() {
       </View>
 
       <View style={styles.inputSection}>
+        {/* Dropdown for selecting source language */}
+        <View style={styles.dropdownContainer}>
+          <TouchableOpacity
+            style={styles.dropdownBox}
+            onPress={() => setDropdownVisible(!dropdownVisible)} // Toggle visibility
+          >
+            <Text style={styles.dropdownOptionText}>{sourceLang}</Text>
+          </TouchableOpacity>
+          {dropdownVisible && (
+            <View style={styles.dropdownOptions}>
+              {sourceLangOptions.map(opt => (
+                <TouchableOpacity
+                  key={opt.code}
+                  style={[styles.dropdownOption, sourceLang === opt.code && styles.dropdownSelected]}
+                  onPress={() => {
+                    setSourceLang(opt.code);
+                    setDropdownVisible(false); // Close dropdown after selection
+                  }}
+                >
+                  <Text
+                    style={styles.dropdownOptionText}
+                    numberOfLines={1} // Prevent text wrapping
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Text input for entering word */}
         <TextInput
           style={styles.textInput}
           value={inputText}
@@ -187,7 +268,7 @@ export default function TranslateScreen() {
           returnKeyType="done"
           onSubmitEditing={handleTranslate}
         />
-        
+
         <TouchableOpacity
           style={[styles.translateButton, isTranslating && styles.disabledButton]}
           onPress={handleTranslate}
@@ -352,5 +433,78 @@ const styles = StyleSheet.create({
   },
   bottomBanner: {
     backgroundColor: 'transparent',
+  },
+  dropdownContainer: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      marginRight: 10,
+    },
+    dropdownLabel: {
+      fontSize: 12,
+      color: '#888',
+      marginBottom: 2,
+    },
+    dropdownBox: {
+      flexDirection: 'row',
+      backgroundColor: '#F8F9FA',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#E0E0E0',
+      paddingHorizontal: 8, // Increased padding for better spacing
+      paddingVertical: 4, // Adjusted padding for better appearance
+      marginBottom: 2,
+      width: '100%', // Set width to 100% to make it wider
+      minWidth: 40, // Set a minimum width to accommodate longer text
+    },
+    dropdownOption: {
+      paddingHorizontal: 12, // Increased padding for better spacing
+      paddingVertical: 6, // Adjusted padding for better appearance
+      borderRadius: 6,
+      marginHorizontal: 2,
+      backgroundColor: '#F8F9FA',
+      width: '100%', // Ensure options take full width of the dropdown
+      minWidth: 100, // Ensure options take enough width for the text
+    },
+    dropdownSelected: {
+      backgroundColor: '#D6EAF8',
+      borderColor: '#3498DB',
+      borderWidth: 1,
+    },
+    dropdownOptionText: {
+      fontSize: 16, // Keep font size for readability
+      color: '#2C3E50',
+      fontWeight: '500',
+      textAlign: 'center', // Center align text
+      whiteSpace: 'nowrap', // Prevent text wrapping
+      overflow: 'hidden', // Ensure text does not overflow
+    },
+    dropdownOptions: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#E0E0E0',
+      borderRadius: 8,
+      zIndex: 20, // Ensure it appears above other elements
+    },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#2C3E50',
+    textAlign: 'center',
   },
 });

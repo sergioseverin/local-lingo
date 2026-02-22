@@ -37,7 +37,14 @@ export default function TranslationMapScreen({ onStatusChange }: TranslationMapS
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationsByCountry, setTranslationsByCountry] = useState<TranslationsByCountry>({});
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
+    const [sourceLang, setSourceLang] = useState<string>('EN');
+    const sourceLangOptions = [
+      { code: 'EN', label: 'English' },
+      { code: 'IT', label: 'Italian' },
+      { code: 'DE', label: 'German' },
+      { code: 'ES', label: 'Spanish' },
+      { code: 'FR', label: 'French' },
+    ];
 
   // Safe version access  
   const getVersionDisplay = () => {
@@ -197,6 +204,21 @@ export default function TranslationMapScreen({ onStatusChange }: TranslationMapS
 
       {/* Input Section */}
       <View style={styles.inputSection}>
+        {/* Dropdown */}
+        <View style={styles.dropdownContainer}>
+          <Text style={styles.dropdownLabel}>From:</Text>
+          <View style={styles.dropdownBox}>
+            {sourceLangOptions.map(opt => (
+              <TouchableOpacity
+                key={opt.code}
+                style={[styles.dropdownOption, sourceLang === opt.code && styles.dropdownSelected]}
+                onPress={() => setSourceLang(opt.code)}
+              >
+                <Text style={styles.dropdownOptionText}>{opt.code}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
         <TextInput
           style={styles.textInput}
           value={inputText}
@@ -330,6 +352,43 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#E0E0E0',
     borderRadius: 12,
+    dropdownContainer: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      marginRight: 10,
+    },
+    dropdownLabel: {
+      fontSize: 12,
+      color: '#888',
+      marginBottom: 2,
+    },
+    dropdownBox: {
+      flexDirection: 'row',
+      backgroundColor: '#F8F9FA',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#E0E0E0',
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      marginBottom: 2,
+    },
+    dropdownOption: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      marginHorizontal: 2,
+      backgroundColor: '#F8F9FA',
+    },
+    dropdownSelected: {
+      backgroundColor: '#D6EAF8',
+      borderColor: '#3498DB',
+      borderWidth: 1,
+    },
+    dropdownOptionText: {
+      fontSize: 14,
+      color: '#2C3E50',
+      fontWeight: '500',
+    },
     paddingHorizontal: 16,
     fontSize: 16,
     backgroundColor: '#F8F9FA',
