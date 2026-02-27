@@ -148,15 +148,16 @@ Minimal compliance for your app:
     “Dictionary data derived from English Wiktionary via Wiktextract/Kaikki.org, licensed under CC BY-SA 3.0 and GFDL.”
 
 
+
 ### Dictionary Build Methods
 
-**Current method (recommended):**
+**Current method (recommended for English-only):**
 
 1. Go to https://kaikki.org/dictionary/rawdata.html
 2. Download the file: "Download raw Wiktextract data (JSONL, one object per line)" (raw-wiktextract-data.jsonl.gz, ~2.3GB compressed, ~20.3GB uncompressed)
    - Direct link: https://kaikki.org/dictionary/raw-wiktextract-data.jsonl.gz
 3. Extract the .gz file to obtain raw-wiktextract-data.jsonl (use `gunzip` or similar tool)
-4. Process the extracted JSONL file with the script: `scripts/Wiktextract_build_eu_dictionary.py` to filter, parse, and convert it into the app's dictionary format (`app/data/eu_dictionary.json`)
+4. Process the extracted JSONL file with the script: `scripts/Wiktextract_build_eu_dictionary.py` to filter, parse, and convert it into the app's dictionary format (`app/data/eu_en_dictionary.json`)
    - The script selects relevant languages, normalizes entries, and outputs a compact JSON mapping English words to translations for each target language.
 5. Place the resulting eu_en_dictionary.json in app/data/ and/or compress as base.min.json.gz for assets/dictionaries/
 
@@ -170,6 +171,162 @@ If you need to regenerate or update the dictionary, follow these steps. For deta
 
 
 - **Large file exclusions**: Marketing videos and build artifacts excluded from git
+
+### Multi-Source Dictionary Architecture (Current Production Method)
+
+#### 1. Why We Switched From Single Raw File
+
+Originally we used:
+raw-wiktextract-data.jsonl.gz (2.3GB compressed)
+
+This worked well for English headwords only.
+
+However:
+- Non-English headwords in that combined file did NOT contain usable translation payloads.
+- Italian, Spanish, French, German builds returned zero or near-zero results.
+
+Conclusion:
+We must use the per-language Kaikki extract files instead.
+
+#### 2. Correct Data Sources (Kaikki Per-Language Extracts)
+
+From:
+https://kaikki.org/dictionary/rawdata.html
+
+We now download per-language files:
+
+- de-extract.jsonl.gz
+- fr-extract.jsonl.gz
+- it-extract.jsonl.gz
+- es-extract.jsonl.gz
+
+These files contain:
+- Headwords in that source language
+- Proper translation sections for each entry
+
+This is the required method for non-English dictionaries.
+
+#### 3. Source Dictionaries Built
+
+We now generate five independent source dictionaries:
+
+- eu_en_dictionary.json
+- eu_fr_dictionary.json
+- eu_de_dictionary.json
+- eu_it_dictionary.json
+- eu_es_dictionary.json
+
+Each dictionary:
+- Uses lowercase normalized source word as key
+- Maps to { target_lang_code: translated_word }
+- Keeps only first translation per target language for compactness
+
+Example format:
+
+{
+  "free": {
+    "fr": "libre",
+    "de": "frei",
+    "it": "libero"
+  }
+}
+
+#### 4. Build Scripts
+
+##### English (raw combined file)
+Script:
+scripts/Wiktextract_build_eu_dictionary.py
+
+Filters:
+obj.get("lang") == "English"
+
+Output:
+app/data/eu_en_dictionary.json
+
+##### Per-language builds
+Script:
+scripts/Wiktextract_build_one_source_dictionary.py
+
+Example commands:
+
+German:
+python3 Wiktextract_build_one_source_dictionary.py \
+  --input Raw_Files/de-extract.jsonl.gz \
+  --source_lang de \
+  --out app/data/eu_de_dictionary.json
+
+French:
+python3 Wiktextract_build_one_source_dictionary.py \
+  --input Raw_Files/fr-extract.jsonl.gz \
+  --source_lang fr \
+  --out app/data/eu_fr_dictionary.json
+
+Italian:
+python3 Wiktextract_build_one_source_dictionary.py \
+  --input Raw_Files/it-extract.jsonl.gz \
+  --source_lang it \
+  --out app/data/eu_it_dictionary.json
+
+Spanish:
+python3 Wiktextract_build_one_source_dictionary.py \
+  --input Raw_Files/es-extract.jsonl.gz \
+  --source_lang es \
+  --out app/data/eu_es_dictionary.json
+
+#### 5. Coverage Reality
+
+Observed coverage:
+
+- French: very strong (~168k words)
+- German: strong (~96k words)
+- English: ~125k words
+- Italian: weaker (~34k words)
+- Spanish: weaker (~26k words)
+
+Therefore ES and IT frequently miss translations for many countries.
+
+#### 6. French Pivot Triangulation Strategy
+
+To mitigate ES and IT gaps, we implemented a triangulation strategy using French as pivot.
+
+When user enters an Italian or Spanish word:
+
+1) Lookup in its native dictionary.
+2) If some country translations are missing:
+   - Use reverse index to map the Italian/Spanish word → French headword.
+   - Lookup that French headword in eu_fr_dictionary.json.
+   - Use missing translations from French entry.
+
+This dramatically improves coverage offline without API calls.
+
+#### 7. Reverse Index Generation
+
+We generated reverse index files:
+
+- fr_reverse_index_es.json
+- fr_reverse_index_it.json
+
+These map:
+
+translated_word → [french_headwords]
+
+They are built offline via Python script scanning the French dictionary.
+
+These are loaded only when ES or IT dictionary is active.
+
+#### 8. Final Architecture Summary
+
+The app now uses:
+
+Primary source dictionary (EN / FR / DE / IT / ES)
++
+Optional French reverse index (for ES/IT fallback)
+
+This provides:
+- Fully offline operation
+- Strong coverage
+- No runtime API dependency
+- Controlled memory usage
 
 ### Deployment Checklist
 1. Increment version in all three files
