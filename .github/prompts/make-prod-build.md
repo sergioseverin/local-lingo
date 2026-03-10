@@ -30,8 +30,8 @@ Use this prompt to create a new production AAB build ready for Google Play Store
    - Confirm production signing certificate fingerprint matches: SHA1 `04:D9:81:D0:DB:7C:81:7C:68:27:7D:F9:DB:CF:20:B6:84:12:FA:4C`
 
 ### Current Version Tracking:
-- **Last Production Version**: 1.2.5 (Version Code: 32)
-- **Next Version Should Be**: 1.2.6 (Version Code: 33) or higher
+- **Last Production Version**: 1.2.8 (Version Code: 32)
+- **Next Version Should Be**: 1.2.9 (Version Code: 33) or higher
 
 ### Files to Update:
 - `/app.json` - Update `expo.version` and `expo.android.versionCode`
